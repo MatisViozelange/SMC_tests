@@ -24,7 +24,7 @@ class STWC():
             self.multiplicative_perturbation = None
             
         # sliding variable
-        self.c1 = 0.01
+        self.c1 = 1
         self.s = np.zeros(self.n)
         # observator of derivative of sliding variable
         self.psi = np.zeros(self.n)
