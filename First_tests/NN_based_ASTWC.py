@@ -349,10 +349,10 @@ y_ref = 10 * np.sin((np.arange(0, n + 1, 1) / (n + 1)) * 2 * np.pi * 4)
 
 # First controler without neural network
 # controler = AutoTuneSTWC(time, Te, reference=y_ref)
-controler = ASTWC(time, Te, reference=y_ref)
+controler = ASTWC(time, Te, reference=None)
 
 # seconde controler with neural network
-NN_inner_controler = ASTWC(time, Te, reference=y_ref)
+NN_inner_controler = ASTWC(time, Te, reference=None)
 # NN_inner_controler = AutoTuneSTWC(time, Te, reference=None)
 NN_controler = NN_based_STWC(NN_inner_controler)
 
