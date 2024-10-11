@@ -31,7 +31,7 @@ class ASTWC():
         self.alpha = 100 
         self.alpha_star = 3
         
-        self.epsilon = 0.2 # 0.02
+        self.epsilon = 0.02 # 0.02
         
         # intialize gains
         self.k[0] = 0.1
@@ -39,7 +39,7 @@ class ASTWC():
         # state variables
         self.x1 = np.zeros(self.n + 1)
         self.x2 = np.zeros(self.n + 1)
-        self.x1[0] = 0.5
+        # self.x1[0] = 0.5
         
         # system output
         self.y = np.zeros(self.n)
@@ -73,8 +73,8 @@ class ASTWC():
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
           
     def STWC(self, i):
-        self.v_dot[i] = - self.k[i] / 2 * np.sign(self.s[i])
-        self.u[i] = - self.k[i] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
+        self.v_dot[i] = - self.k[i] * np.sign(self.s[i])
+        self.u[i] = - self.k[i] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
          
     def compute_input(self, i):
         self.update_output(i)
@@ -95,7 +95,7 @@ def system(x1, x2, u, i):
     
 ################################ SIMULATION ################################
 time = 10
-Te = 0.0001
+Te = 0.0005
 n = int(time / Te) 
 y_ref = 10 * np.sin((np.arange(0, n + 1, 1) / (n + 1)) * 2 * np.pi * 4)
 

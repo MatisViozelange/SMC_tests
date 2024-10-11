@@ -84,11 +84,11 @@ class AutoTuneSTWC():
     def update_gains(self, i):
         #compute alpha 
         self.r_dot[i] = self.k2[i] * np.sign(self.s[i])
-        self.alpha[i] = self.k1[i] * np.sqrt(abs(self.s[i])) + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i + 1]))
+        self.alpha[i] = self.k1[i] * np.sqrt(abs(self.s[i])) + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i + 1], dx=self.Te))
         
         # update epsilon
         if i > 0:
-            self.epsilon[i] = (self.alpha[i] + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i]))) * self.Te + self.k2[i] * self.Te**2
+            self.epsilon[i] = (self.alpha[i] + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i], dx=self.Te))) * self.Te + self.k2[i] * self.Te**2
         else:
             self.epsilon[i] = (self.alpha[i] + abs(self.psi[i])) * self.Te + self.k2[i] * self.Te**2
         
@@ -105,7 +105,7 @@ class AutoTuneSTWC():
         
     def STWC(self, i):
         self.v_dot[i] = - self.k2[i + 1] * np.sign(self.s[i])
-        self.w[i] = - self.k1[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
+        self.w[i] = - self.k1[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
         
         t = self.times[i]
         
@@ -202,8 +202,8 @@ class ASTWC():
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
           
     def STWC(self, i):
-        self.v_dot[i] = - self.k[i + 1] / 2 * np.sign(self.s[i])
-        self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
+        self.v_dot[i] = - self.k[i + 1] * np.sign(self.s[i])
+        self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
          
     def compute_input(self, i):
         self.update_output(i)
@@ -336,7 +336,7 @@ def b(x1, x2, t, Te):
 
 # ez model
 def a_ez(x1, x2, t, Te):
-    return np.sin(np.pi * t / 2)
+    return 5 * np.sin(np.pi * t / 2)
 
 def b_ez(x1, x2, t, Te):
     return 1
