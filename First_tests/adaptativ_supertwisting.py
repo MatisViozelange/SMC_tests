@@ -27,7 +27,7 @@ def pendule(x1, x2, u, t):
 
 
 n = 100000
-times = np.linspace(0, 50, n)
+times = np.linspace(0, 20, n)
 dt = times[1]
 
 alpha = np.ones(n + 1)
@@ -53,7 +53,8 @@ x2 = np.zeros(n)
 x1[0] = 0.5
 
 y = x1
-y_ref = 10 * np.sin((np.arange(0, n, 1) / n) * 2 * np.pi * 4)
+y_ref = np.zeros(n) #10 * np.sin((np.arange(0, n, 1) / n) * 2 * np.pi * 4)
+y_ref_dot = np.gradient(y_ref, dt)
 e = np.zeros(n)
 e_dot = np.zeros(n)
 
@@ -68,7 +69,7 @@ for i in range(n):
     
     # Compute error and its derivative
     e[i] = y[i] - y_ref[i]
-    e_dot[i] = d(e, i, dt)
+    e_dot[i] = x2[i] - y_ref_dot[i]
     
     # Compute sliding variable
     s[i] = e_dot[i] + c1 * e[i]

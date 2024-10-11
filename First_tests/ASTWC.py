@@ -31,7 +31,7 @@ class ASTWC():
         self.alpha = 100 
         self.alpha_star = 3
         
-        self.epsilon = 0.02 # 0.02
+        self.epsilon = 0.2 # 0.02
         
         # intialize gains
         self.k[0] = 0.1
@@ -69,12 +69,12 @@ class ASTWC():
             self.k_dot[i] = - self.alpha_star * self.k[i]
         else:
             self.k_dot[i] = self.alpha / np.sqrt(np.abs(self.s[i]))
-            
+        
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
           
     def STWC(self, i):
-        self.v_dot[i] = - self.k[i + 1] * np.sign(self.s[i])
-        self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
+        self.v_dot[i] = - self.k[i] / 2 * np.sign(self.s[i])
+        self.u[i] = - self.k[i] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
          
     def compute_input(self, i):
         self.update_output(i)
@@ -87,17 +87,19 @@ class ASTWC():
     
 ################################ DYNAMICAL SYSTEM ################################
 
-def system(x1, x2, u):
-    a = 0.7
+def system(x1, x2, u, i):
+    a = 5
     x1_dot = x2
-    x2_dot = u #+ a * np.sin(x1)
+    x2_dot = u + a * np.sin(times[i])
     return x1_dot, x2_dot
     
 ################################ SIMULATION ################################
-time = 15
-Te = 0.0005
+time = 10
+Te = 0.0001
 n = int(time / Te) 
 y_ref = 10 * np.sin((np.arange(0, n + 1, 1) / (n + 1)) * 2 * np.pi * 4)
+
+times = np.linspace(0, time, n)
 
 controler = ASTWC(time, Te, reference=None)
 
@@ -111,6 +113,7 @@ for i in tqdm(range(n)):
                         controler.x1[i], 
                         controler.x2[i], 
                         u, 
+                        i
                     )
     
     # Update states for ASTWC
@@ -118,7 +121,7 @@ for i in tqdm(range(n)):
     controler.x2[i + 1] = controler.x2[i] + x2_dot * controler.Te
     
 # Plotting results
-fig, axs = plt.subplots(2, 2, figsize=(8, 6), sharex=False, sharey=False)
+fig, axs = plt.subplots(2, 2, figsize=(8, 6), sharex=True, sharey=False)
 ((ax1, ax2), (ax3, ax4)) = axs
 
 ax1.plot(controler.times, controler.x1[:-1], label='x1')
@@ -133,7 +136,14 @@ ax2.hlines(-controler.epsilon, 0, controler.time, color='r', linestyle='--')
 ax2.set_xlabel('Time')
 ax2.legend()
 
+perturbation = 5 * np.sin(times)
+perturbation_dot = 5 * np.cos(times)
+
+d_max = np.max(np.abs(perturbation_dot))
+
 ax3.plot(controler.times, controler.k[:-1], label='k')
+ax3.plot(controler.times, np.abs(perturbation_dot), label='|d|')
+ax3.axhline(d_max, color='r', linestyle='--')
 ax3.set_xlabel('Time')
 ax3.legend()
 

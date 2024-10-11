@@ -151,7 +151,7 @@ class ASTWC():
         self.type = 'ASTWC'
         
         # sliding variable
-        self.c1 = 0.005
+        self.c1 = 1
         self.s = np.zeros(self.n)
         
         # gain
@@ -194,7 +194,6 @@ class ASTWC():
         self.s[i] = self.e_dot[i] + self.c1 * self.e[i]
         
     def update_gains(self, i):
-        
         if np.abs(self.s[i]) <= self.epsilon:
             self.k_dot[i] = - self.alpha_star * self.k[i]
         else:
@@ -203,7 +202,7 @@ class ASTWC():
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
           
     def STWC(self, i):
-        self.v_dot[i] = - self.k[i + 1] * np.sign(self.s[i])
+        self.v_dot[i] = - self.k[i + 1] / 2 * np.sign(self.s[i])
         self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
          
     def compute_input(self, i):
@@ -344,16 +343,16 @@ def b_ez(x1, x2, t, Te):
 
 ################################ SIMULATION ################################
 time = 15
-Te = 0.0005
+Te = 0.0002
 n = int(time / Te) 
 y_ref = 10 * np.sin((np.arange(0, n + 1, 1) / (n + 1)) * 2 * np.pi * 4)
 
 # First controler without neural network
 # controler = AutoTuneSTWC(time, Te, reference=y_ref)
-controler = ASTWC(time, Te, reference=None)
+controler = ASTWC(time, Te, reference=y_ref)
 
 # seconde controler with neural network
-NN_inner_controler = ASTWC(time, Te, reference=None)
+NN_inner_controler = ASTWC(time, Te, reference=y_ref)
 # NN_inner_controler = AutoTuneSTWC(time, Te, reference=None)
 NN_controler = NN_based_STWC(NN_inner_controler)
 
