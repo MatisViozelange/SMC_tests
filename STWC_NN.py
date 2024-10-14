@@ -82,7 +82,7 @@ class ASTWC():
         self.STWC(i)
 
 class RBF_neural_network():
-    def __init__(self, time, T) -> None:
+    def __init__(self, time, Te) -> None:
         self.neurones = 50
         self.n = int(time / Te)
         self.times = np.linspace(0, time, self.n)
@@ -126,7 +126,6 @@ class NN_based_STWC(RBF_neural_network):
         super().__init__(Te, time)
         
         self.u = np.zeros(self.n)
-        
         
     def compute_input(self, i):
         self.controler.compute_input(i)
