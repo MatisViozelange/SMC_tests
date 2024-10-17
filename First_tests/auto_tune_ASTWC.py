@@ -77,11 +77,11 @@ class STWC():
     def update_gains(self, i):
         #compute alpha 
         self.r_dot[i] = self.k2[i] * np.sign(self.s[i])
-        self.alpha[i] = self.k1[i] * np.sqrt(abs(self.s[i])) + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i + 1]))
+        self.alpha[i] = self.k1[i] * np.sqrt(abs(self.s[i])) + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i + 1], dx=self.Te))
         
         # update epsilon
         if i > 0:
-            self.epsilon[i] = (self.alpha[i] + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i]))) * self.Te + self.k2[i] * self.Te**2
+            self.epsilon[i] = (self.alpha[i] + abs(self.psi[i]) + abs(integrate.simpson(self.r_dot[:i], dx=self.Te))) * self.Te + self.k2[i] * self.Te**2
         else:
             self.epsilon[i] = (self.alpha[i] + abs(self.psi[i])) * self.Te + self.k2[i] * self.Te**2
         
@@ -98,7 +98,7 @@ class STWC():
         
     def STWC(self, i):
         self.v_dot[i] = - self.k2[i + 1] * np.sign(self.s[i])
-        self.w[i] = - self.k1[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1])
+        self.w[i] = - self.k1[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
         
         t = self.times[i]
         
@@ -116,8 +116,6 @@ class STWC():
         return psi_hat
 
         
-
-
 # Pendulum model
 def longueur_pendule(t):
     return 0.8 + 0.1 * np.sin(8 * t) + 0.3 * np.cos(4 * t)
@@ -151,7 +149,7 @@ tau = 0.01
 n = int(time / Te)
 y_ref = 10 * np.sin((np.arange(0, n, 1) / n) * 2 * np.pi * 4)
 
-controler = STWC(time, tau, Te, reference=None, multiplicative_perturbation=None)
+controler = STWC(time, tau, Te, reference=y_ref, multiplicative_perturbation=None)
 
 x1_dot = 0
 

@@ -13,7 +13,7 @@ class ASTWC():
         self.time = time
         
         if reference is None:
-            self.y_ref = np.zeros(self.n + 1)
+            self.y_ref = np.zeros(self.n)
             self.y_ref_dot = np.zeros(self.n)
         else :
             self.y_ref = reference
@@ -34,7 +34,7 @@ class ASTWC():
         self.epsilon = 0.02 # 0.02
         
         # intialize gains
-        self.k[0] = 0.1
+        self.k[0] = 0.1 #20
         
         # state variables
         self.x1 = np.zeros(self.n + 1)
@@ -71,7 +71,7 @@ class ASTWC():
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
           
     def STWC(self, i):
-        self.v_dot[i] = - self.k[i + 1] * np.sign(self.s[i])
+        self.v_dot[i] = - self.k[i + 1] * 2 * np.sign(self.s[i])
         self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
          
     def compute_input(self, i):
@@ -91,7 +91,7 @@ class RBF_neural_network():
         # centers 
         self.c = 0.2 * np.random.rand(self.neurones) - 0.1
         
-        self.pi = 0.5
+        self.eta = 0.5
         self.gamma = 0.075
         
         self.initial_weights = 2 * 4.12 * np.random.rand(self.neurones) - 4.12
@@ -107,7 +107,12 @@ class RBF_neural_network():
         
     def compute_hidden_layer(self, i, s):
         for j in range(self.neurones):
-            self.hidden_neurons[j] = np.exp(-np.square(s - self.c[j]) / (2 * self.pi**2))
+            # Gaussian kernel
+            self.hidden_neurons[j] = np.exp(-np.square(s - self.c[j]) / (2 * self.eta**2))
+            # sigmoid kernel
+            # self.hidden_neurons[j] = 1 / (1 + np.exp(-self.eta * (s - self.c[j])))
+            # tanh kernel
+            # self.hidden_neurons[j] = np.tanh(self.eta * (s - self.c[j]))
 
     def compute_weights(self, i, k, s, epsilon):
         self.weights_dot[i] = self.gamma * k * np.sign(s) * self.hidden_neurons / (epsilon + np.sqrt(np.abs(s)))
@@ -185,27 +190,34 @@ class basic_system():
         return self.a * np.sin(times)
 
 ################################################## SIMULATION ########################################################
-time = 15
-Te = 0.0002
+time = 20
+Te = 0.0005
 n = int(time / Te) 
-y_ref = 10 * np.sin((np.arange(0, n + 1, 1) / (n + 1)) * 2 * np.pi * 4)
+times = np.linspace(0, time, n)
+y_ref = 10 * np.sin(times)
 
 # First controler without neural network
 controler = ASTWC(time, Te, reference=None)
+# NN_observation = NN_based_STWC(controler, time, Te)
 
 # seconde controler with neural network
 NN_inner_controler = ASTWC(time, Te, reference=None)
 NN_controler = NN_based_STWC(NN_inner_controler, time, Te)
 
 # dynamics
-system = basic_system(controler.times)
-# system = pendule(controler.times)
+# system = basic_system(controler.times)
+system = pendule(controler.times)
 
 
+# Loop simulation
 for i in tqdm(range(n)):
     # SuperTwisting control law
     controler.compute_input(i)
     NN_controler.compute_input(i)
+    
+    # NN_observation.compute_hidden_layer(i, controler.s[i])
+    # NN_observation.compute_weights(i, controler.k[i], controler.s[i], controler.epsilon)
+    # NN_observation.compute_perturbation(i)
     
     # Update system response using the control input for ASTWC
     u = controler.u[i]
@@ -233,14 +245,11 @@ for i in tqdm(range(n)):
     NN_controler.controler.x1[i + 1] = NN_controler.controler.x1[i] + x1_dot * NN_controler.controler.Te
     NN_controler.controler.x2[i + 1] = NN_controler.controler.x2[i] + x2_dot * NN_controler.controler.Te
 
-
-
 ################################ PLOTTING ################################
 fig, axs = plt.subplots(3, 3, num=1, figsize=(8, 6), sharex=True, sharey=False)
 (ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9) = axs.flat
 
 # perturbations
-times = np.linspace(0, time, n)
 
 perturbation    = system.get_perturbation(times, controler.x1, controler.x2)
 perturbation_nn = system.get_perturbation(times, NN_controler.controler.x1, NN_controler.controler.x2)
@@ -262,7 +271,7 @@ d_max_nn = np.max(np.abs(dot_perturbation_nn))
 ax1.title.set_text('ASTWC')
 ax1.plot(controler.times, controler.x1[:-1], label='x1')
 ax1.plot(controler.times, controler.x2[:-1], label='x2')
-ax1.plot(controler.times, controler.y_ref[:-1], label='ref')
+ax1.plot(controler.times, controler.y_ref, label='ref')
 ax1.set_ylabel('x1, x2')
 ax1.legend()
 
@@ -290,6 +299,7 @@ ax3.legend()
 
 ################################ ax8 ################################
 # inputs
+
 ax8.set_title('ASTWC')
 ax8.plot(times, controler.u, label='u')
 ax8.plot(times, controler.v_dot, label='v_dot')
@@ -303,10 +313,11 @@ ax8.legend()
 
 
 ################################ ax4 ################################
+
 ax4.title.set_text('NN_based_ASTWC')
 ax4.plot(NN_controler.controler.times, NN_controler.controler.x1[:-1], label='x1')
 ax4.plot(NN_controler.controler.times, NN_controler.controler.x2[:-1], label='x2')
-ax4.plot(NN_controler.controler.times, NN_controler.controler.y_ref[:-1], label='ref')
+ax4.plot(NN_controler.controler.times, NN_controler.controler.y_ref, label='ref')
 ax4.set_ylabel('x1, x2')
 ax4.legend()
 
@@ -320,9 +331,6 @@ ax5.axhline(y=d_max_nn, color='r', linestyle='--', label=f'Delta_d = {d_max_nn:.
 ax5.set_ylabel('perturbation derivative')
 ax5.legend()
 
-
-
-
 ################################ ax6 ################################
 # Sliding variable
 
@@ -333,10 +341,15 @@ ax6.axhline(y=-NN_controler.controler.epsilon, color='r', linestyle='--')
 ax6.set_ylabel('sliding variable')
 ax6.legend()
 
-
-
 ################################ ax7 ################################
 # estimated perturbation by neural network
+# ax7.set_title('perturbations and NN approximation')
+# ax7.plot(times, perturbation, label='d')
+# ax7.plot(times, NN_observation.perturbation[:-1], label='NN d approx')
+# ax7.set_xlabel('Time')
+# ax7.set_ylabel('perturbation')
+# ax7.legend()
+
 ax7.set_title('perturbations and NN approximation')
 ax7.plot(times, perturbation_nn, label='d')
 ax7.plot(times, NN_controler.perturbation[:-1], label='NN d approx')
@@ -346,6 +359,7 @@ ax7.legend()
 
 ################################ ax9 ################################
 #inputs
+
 ax9.set_title('NN_based_ASTWC')
 ax9.plot(times, NN_controler.controler.u, label='u')
 ax9.plot(times, NN_controler.controler.v_dot, label='v_dot')
