@@ -71,7 +71,7 @@ class ASTWC():
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
           
     def STWC(self, i):
-        self.v_dot[i] = - self.k[i + 1] * 2 * np.sign(self.s[i])
+        self.v_dot[i] = - self.k[i + 1] * np.sign(self.s[i])
         self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
          
     def compute_input(self, i):
@@ -140,7 +140,7 @@ class NN_based_STWC(RBF_neural_network):
         self.compute_weights(i, self.controler.k[i], self.controler.s[i], self.controler.epsilon)
         perturbation = self.compute_perturbation(i)
         
-        self.u[i] = u_ASTWC - perturbation
+        self.u[i] = u_ASTWC - perturbation 
      
 ################################################## Dynamic System ########################################################
 class pendule():
@@ -163,7 +163,7 @@ class pendule():
         l_dot = self.longueur_pendule_dot[i]
         
         x1_dot = x2
-        x2_dot = -2 * l_dot / l - self.g / l * np.sin(x1) + 2 * np.sin(5 * t) + (1 + 0.5 * np.sin(t)) / (self.m * l**2) * u
+        x2_dot = -2 * l_dot / l - self.g / l * np.sin(x1) + 2 * np.sin(t) + (1 + 0.5 * np.sin(t)) / (self.m * l**2) * u
         
         return x1_dot, x2_dot
     
