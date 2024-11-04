@@ -1,8 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from modules.STWC_NN import ASTWC, NN_based_STWC
-from modules.Dynamic_systems import basic_system, pendule
+from modules import ASTWC, NN_based_STWC, basic_system, pendule
 
 ################################################## SIMULATION ########################################################
 time = 20
