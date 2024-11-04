@@ -205,8 +205,8 @@ NN_inner_controler = ASTWC(time, Te, reference=None)
 NN_controler = NN_based_STWC(NN_inner_controler, time, Te)
 
 # dynamics
-# system = basic_system(controler.times)
-system = pendule(controler.times)
+system = basic_system(controler.times)
+# system = pendule(controler.times)
 
 
 # Loop simulation
