@@ -6,6 +6,8 @@ class pendule():
         self.g = 9.81
         self.m = 2 
         
+        self.name = 'pendule'
+        
         self.Te = times[1] - times[0]
         
         self.longueur_pendule = self.compute_longueur_pendule(times)
@@ -38,6 +40,7 @@ class pendule():
 class basic_system():
     def __init__(self, times) -> None:
         self.a = 5
+        self.name = 'basic_system'
         
     def compute_dynamics(self, x1, x2, u, t):
         x1_dot = x2

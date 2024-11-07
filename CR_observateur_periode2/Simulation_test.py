@@ -16,11 +16,11 @@ y_ref = 10 * np.sin(times)
 # First controler without neural network
 controler = ASTWC(time, Te, reference=None)
 # Open loop observator
-NN_BO_Observator = NN_based_STWC(controler, time, Te)
+# NN_BO_Observator = NN_based_STWC(controler, time, Te)
 
 # seconde controler with neural network
 NN_inner_controler = ASTWC(time, Te, reference=None)
-NN_controler = NN_based_STWC(NN_inner_controler, time, Te)
+NN_controler = NN_based_STWC(NN_inner_controler, time, Te, neurones=70)
 
 # dynamics
 system = basic_system(controler.times)
@@ -34,9 +34,9 @@ for i in tqdm(range(n)):
     NN_controler.compute_input(i)
     
     # Update the observator in Open Loop
-    NN_BO_Observator.compute_hidden_layer(i, controler.s[i])
-    NN_BO_Observator.compute_weights(i, controler.k[i], controler.s[i], controler.epsilon)
-    NN_BO_Observator.compute_perturbation(i)
+    # NN_BO_Observator.compute_hidden_layer(i, controler.s[i])
+    # NN_BO_Observator.compute_weights(i, controler.k[i], controler.s[i], controler.epsilon)
+    # NN_BO_Observator.compute_perturbation(i)
     
     # Update system response using the control input for ASTWC
     u = controler.u[i]
@@ -238,7 +238,7 @@ plt.show()
 ################################ APPROXIMATION PERFORMANCE ################################
 
 # NN Perturbation Approximation
-NN_perturbation_approximation_BO = NN_BO_Observator.perturbation[:-1]
+# NN_perturbation_approximation_BO = NN_BO_Observator.perturbation[:-1]
 NN_perturbation_approximation = NN_controler.perturbation[:-1]
 
 # BF Performance Metrics
@@ -247,15 +247,15 @@ mean_error_bf = np.mean(NN_perturbation_approximation - real_perturbation_nn)
 std_deviation_bf = np.sqrt(np.mean((NN_perturbation_approximation - real_perturbation_nn - mean_error_bf) ** 2))
 
 # BO Performance Metrics
-error_bo = np.sum((NN_perturbation_approximation_BO - real_perturbation) ** 2)
-mean_error_bo = np.mean(NN_perturbation_approximation_BO - real_perturbation)
-std_deviation_bo = np.sqrt(np.mean((NN_perturbation_approximation_BO - real_perturbation - mean_error_bo) ** 2))
+# error_bo = np.sum((NN_perturbation_approximation_BO - real_perturbation) ** 2)
+# mean_error_bo = np.mean(NN_perturbation_approximation_BO - real_perturbation)
+# std_deviation_bo = np.sqrt(np.mean((NN_perturbation_approximation_BO - real_perturbation - mean_error_bo) ** 2))
 
 # Create DataFrame for Results
 data = {
     'Metric': ['Quadratic Error', 'Mean Error', 'Standard Deviation'],
     'BF Estimation': [error_bf, mean_error_bf, std_deviation_bf],
-    'BO Estimation': [error_bo, mean_error_bo, std_deviation_bo]
+    # 'BO Estimation': [error_bo, mean_error_bo, std_deviation_bo]
 }
 results_df = pd.DataFrame(data)
 
@@ -288,4 +288,4 @@ def show_results_table(df):
 
     root.mainloop()
 
-show_results_table(results_df)
+# show_results_table(results_df)

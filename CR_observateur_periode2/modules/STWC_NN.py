@@ -3,6 +3,7 @@ from scipy import integrate
 
 
 
+
 ################################################## Controler Class ########################################################
 class ASTWC():
     def __init__(self, time, Te, reference=None) -> None:
@@ -11,78 +12,50 @@ class ASTWC():
         self.Te = self.times[1] - self.times[0]
         self.time = time
         
-        if reference is None:
-            self.y_ref = np.zeros(self.n)
-            self.y_ref_dot = np.zeros(self.n)
-        else :
-            self.y_ref = reference
-            self.y_ref_dot = np.gradient(self.y_ref, self.Te) 
+        self.y_ref = np.zeros(self.n) if reference is None else reference
+        self.y_ref_dot = np.gradient(self.y_ref, self.Te) if reference is not None else np.zeros(self.n)
         
-        
-        # sliding variable
         self.c1 = 1
         self.s = np.zeros(self.n)
-        
-        # gain
         self.k = np.zeros(self.n + 1)
         self.k_dot = np.zeros(self.n)
         
         self.alpha = 100 
         self.alpha_star = 3
+        self.epsilon = 0.02
+        self.k[0] = 0.1
         
-        self.epsilon = 0.02 # 0.02
-        
-        # intialize gains
-        self.k[0] = 0.1 #20
-        
-        # state variables
         self.x1 = np.zeros(self.n + 1)
         self.x2 = np.zeros(self.n + 1)
         
-        # system output
         self.y = np.zeros(self.n)
-        
-        # error
         self.e = np.zeros(self.n)
         self.e_dot = np.zeros(self.n)
         
-        # control input
         self.u = np.zeros(self.n)
         self.v_dot = np.zeros(self.n)
-        
-    # class methods
-    def update_output(self, i):
+
+    def compute_input(self, i):
         self.y[i] = self.x1[i]
-        
-    def compute_error(self, i):
         self.e[i] = self.y[i] - self.y_ref[i]
         self.e_dot[i] = self.x2[i] - self.y_ref_dot[i]
-            
-    def update_sliding_variable(self, i):
+        
         self.s[i] = self.e_dot[i] + self.c1 * self.e[i]
         
-    def update_gains(self, i):
         if np.abs(self.s[i]) <= self.epsilon:
-            self.k_dot[i] = - self.alpha_star * self.k[i]
+            self.k_dot[i] = -self.alpha_star * self.k[i]
         else:
             self.k_dot[i] = self.alpha / np.sqrt(np.abs(self.s[i]))
             
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
-          
-    def STWC(self, i):
-        self.v_dot[i] = - self.k[i + 1] * np.sign(self.s[i])
-        self.u[i] = - self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
-         
-    def compute_input(self, i):
-        self.update_output(i)
-        self.compute_error(i)
-        self.update_sliding_variable(i)
-        self.update_gains(i)
-        self.STWC(i)
+        self.v_dot[i] = -self.k[i + 1] * np.sign(self.s[i])
+        self.u[i] = -self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
+
+
 
 class RBF_neural_network():
-    def __init__(self, time, Te) -> None:
-        self.neurones = 50
+    def __init__(self, time, Te, neurones=50, gamma=0.075) -> None:
+        self.neurones = neurones
         self.n = int(time / Te)
         self.times = np.linspace(0, time, self.n)
         self.Te = self.times[1] - self.times[0]
@@ -91,7 +64,7 @@ class RBF_neural_network():
         self.c = 0.2 * np.random.rand(self.neurones) - 0.1
         
         self.eta = 0.5
-        self.gamma = 0.075
+        self.gamma = gamma
         
         self.initial_weights = 2 * 4.12 * np.random.rand(self.neurones) - 4.12
         
@@ -125,9 +98,9 @@ class RBF_neural_network():
         return self.perturbation[i + 1]
     
 class NN_based_STWC(RBF_neural_network):
-    def __init__(self, controler, Te, time) -> None:
+    def __init__(self, controler, Te, time, neurones=50, gamma=0.075) -> None:
         self.controler = controler
-        super().__init__(Te, time)
+        super().__init__(Te, time, neurones=neurones, gamma=gamma)
         
         self.u = np.zeros(self.n)
         
