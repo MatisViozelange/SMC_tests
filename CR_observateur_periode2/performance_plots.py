@@ -45,6 +45,52 @@ def show_plot(fig):
     canvas = FigureCanvasTkAgg(fig, master=plot_frame)
     canvas.draw()
     canvas.get_tk_widget().pack()
+    
+# Tkinter Window for displaying the DataFrame
+def show_dataframe(df):
+    root = tk.Tk()
+    root.title("Performance DataFrame")
+
+    frame = ttk.Frame(root)
+    frame.pack(fill="both", expand=True)
+
+    tree = ttk.Treeview(frame, columns=list(df.columns), show="headings")
+    for col in df.columns:
+        tree.heading(col, text=col)
+        tree.column(col, anchor="center")
+
+    for _, row in df.iterrows():
+        tree.insert("", "end", values=list(row))
+
+    tree.pack(fill="both", expand=True)
+    root.mainloop()
+
+# Plotting errors as function of neurons and gamma
+def plot_errors_vs_neurons(df):
+    unique_gammas = df['gamma'].unique()
+    plt.figure()
+    for gamma in unique_gammas:
+        subset = df[df['gamma'] == gamma]
+        plt.plot(subset['n_neurons'], subset['mean_quad_perturbation_approximation_error'], label=f'gamma={gamma:.3f}')
+    plt.xlabel('Number of Neurons')
+    plt.ylabel('Mean Quadratic Perturbation Approximation Error')
+    plt.title('Error vs Neurons for Different Gamma Values')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def plot_errors_vs_gamma(df):
+    unique_neurons = df['n_neurons'].unique()
+    plt.figure()
+    for n_neurons in unique_neurons:
+        subset = df[df['n_neurons'] == n_neurons]
+        plt.plot(subset['gamma'], subset['mean_quad_perturbation_approximation_error'], label=f'n_neurons={n_neurons}')
+    plt.xlabel('Gamma')
+    plt.ylabel('Mean Quadratic Perturbation Approximation Error')
+    plt.title('Error vs Gamma for Different Number of Neurons')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 # Interface utilisateur pour la sélection des paramètres
 control_frame = ttk.LabelFrame(root, text="Contrôles")
@@ -85,6 +131,28 @@ plot_neurons_button = ttk.Button(
     command=lambda: plot_error_vs_gamma([int(val) for val in neurons_combobox.get().split(',')], error_type_combobox.get()),
 )
 plot_neurons_button.pack(pady=5)
+
+# Bouton pour afficher le DataFrame
+show_dataframe_button = ttk.Button(
+    control_frame,
+    text="Afficher DataFrame",
+    command=lambda: show_dataframe(df),
+)
+show_dataframe_button.pack(pady=5)
+
+show_errorsVsNeurons_button = ttk.Button(
+    control_frame,
+    text="Plot Errors vs Neurons",
+    command=lambda: plot_errors_vs_neurons(df),
+)
+show_errorsVsNeurons_button.pack(pady=5)
+
+show_errorsVsGamma_button = ttk.Button(
+    control_frame,
+    text="Plot Errors vs Gamma",
+    command=lambda: plot_errors_vs_gamma(df),
+)
+show_errorsVsGamma_button.pack(pady=5)
 
 # Lancer la boucle principale de la fenêtre
 root.mainloop()

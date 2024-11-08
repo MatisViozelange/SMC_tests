@@ -1,13 +1,10 @@
 import numpy as np
 import pandas as pd
-import tkinter as tk
 from tqdm import tqdm
-from tkinter import ttk
-import matplotlib.pyplot as plt
 from modules import ASTWC, NN_based_STWC, basic_system, pendule
 
 ################################################## SIMULATION ########################################################
-time = 10
+time = 5
 Te = 0.001
 n = int(time / Te) 
 times = np.linspace(0, time, n)
@@ -32,8 +29,8 @@ system = basic_system(times)
 ##########################################################################
 
 # Simulation
-gamma_tests     = np.arange(0.025, 1, 0.025)
-n_neurons_tests = np.arange(10, 110, 10)
+gamma_tests     = np.arange(0.005, 0.5, 0.005)
+n_neurons_tests = np.arange(2, 101, 2)
 
 # Performance indices
 performance = pd.DataFrame(columns=['gamma', 
@@ -87,58 +84,9 @@ for n_neurons in tqdm(n_neurons_tests):
             'perturbation_approximation_correlation_coefficient': correlation_coefficient
         }], dtype=object)], ignore_index=True)
 
+print(f'Saving performance DataFrame to results_{system.name}.csv ...')
+
 # Save the performance DataFrame to a CSV file
 performance.to_csv(f'results_{system.name}.csv', index=False)
 
-# Tkinter Window for displaying the DataFrame
-def show_dataframe(df):
-    root = tk.Tk()
-    root.title("Performance DataFrame")
-
-    frame = ttk.Frame(root)
-    frame.pack(fill="both", expand=True)
-
-    tree = ttk.Treeview(frame, columns=list(df.columns), show="headings")
-    for col in df.columns:
-        tree.heading(col, text=col)
-        tree.column(col, anchor="center")
-
-    for _, row in df.iterrows():
-        tree.insert("", "end", values=list(row))
-
-    tree.pack(fill="both", expand=True)
-    root.mainloop()
-
-# Plotting errors as function of neurons and gamma
-def plot_errors_vs_neurons(df):
-    unique_gammas = df['gamma'].unique()
-    plt.figure()
-    for gamma in unique_gammas:
-        subset = df[df['gamma'] == gamma]
-        plt.plot(subset['n_neurons'], subset['mean_quad_perturbation_approximation_error'], label=f'gamma={gamma:.3f}')
-    plt.xlabel('Number of Neurons')
-    plt.ylabel('Mean Quadratic Perturbation Approximation Error')
-    plt.title('Error vs Neurons for Different Gamma Values')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-def plot_errors_vs_gamma(df):
-    unique_neurons = df['n_neurons'].unique()
-    plt.figure()
-    for n_neurons in unique_neurons:
-        subset = df[df['n_neurons'] == n_neurons]
-        plt.plot(subset['gamma'], subset['mean_quad_perturbation_approximation_error'], label=f'n_neurons={n_neurons}')
-    plt.xlabel('Gamma')
-    plt.ylabel('Mean Quadratic Perturbation Approximation Error')
-    plt.title('Error vs Gamma for Different Number of Neurons')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-# Display the DataFrame
-show_dataframe(performance)
-
-# Plot the errors
-plot_errors_vs_neurons(performance)
-plot_errors_vs_gamma(performance)
+print(f'Performance DataFrame saved to results_{system.name}.csv')
