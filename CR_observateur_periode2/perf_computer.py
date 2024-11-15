@@ -11,8 +11,8 @@ times = np.linspace(0, time, n)
 y_ref = 10 * np.sin(times)
 
 # dynamics
-system = basic_system(times)
-# system = pendule(times)
+# system = basic_system(times)
+system = pendule(times)
 
 # Parameters Overview ####################################################
 #       gamma : adaptation protocole parameter (learning rate)           #

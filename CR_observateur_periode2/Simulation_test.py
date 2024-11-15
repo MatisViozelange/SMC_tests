@@ -4,7 +4,7 @@ import tkinter as tk
 from tqdm import tqdm
 from tkinter import ttk
 import matplotlib.pyplot as plt
-from modules import ASTWC, NN_based_STWC, basic_system, pendule
+from modules import ASTWC, NN_based_STWC, basic_system, pendule, STWC
 
 ################################################## SIMULATION ########################################################
 time = 20
@@ -12,15 +12,18 @@ Te = 0.0005
 n = int(time / Te) 
 times = np.linspace(0, time, n)
 y_ref = 10 * np.sin(times)
+k = 1.7
 
 # First controler without neural network
 controler = ASTWC(time, Te, reference=None)
+# controler = STWC(time, Te, k=k, reference=None)
 # Open loop observator
 # NN_BO_Observator = NN_based_STWC(controler, time, Te)
 
 # seconde controler with neural network
 NN_inner_controler = ASTWC(time, Te, reference=None)
-NN_controler = NN_based_STWC(NN_inner_controler, time, Te, neurones=70)
+# NN_inner_controler = STWC(time, Te, k=k, reference=None)
+NN_controler = NN_based_STWC(NN_inner_controler, time, Te, neurones=50, gamma=0.075)
 
 # dynamics
 system = basic_system(controler.times)
@@ -184,7 +187,7 @@ ax7.legend()
 
 ax9.set_title('NN_based_ASTWC')
 ax9.plot(times, NN_controler.controler.u, label='u')
-ax9.plot(times, NN_controler.controler.v_dot, label='v_dot')
+# ax9.plot(times, NN_controler.controler.v_dot, label='v_dot')
 ax9.set_xlabel('Time')
 ax9.set_ylabel('inputs')
 ax9.legend()

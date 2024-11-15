@@ -3,8 +3,50 @@ from scipy import integrate
 
 
 
-
 ################################################## Controler Class ########################################################
+class STWC():
+    def __init__(self, time, Te, k=5, reference=None) -> None:
+        self.n = int(time / Te)
+        self.times = np.linspace(0, time, self.n)
+        self.Te = self.times[1] - self.times[0]
+        self.time = time
+        
+        self.y_ref = np.zeros(self.n) if reference is None else reference
+        self.y_ref_dot = np.gradient(self.y_ref, self.Te) if reference is not None else np.zeros(self.n)
+        
+        self.c1 = 1
+        self.s = np.zeros(self.n)
+        self.k = np.zeros(self.n + 1)
+        
+        self.k[0] = k
+        
+        self.epsilon = 0.02
+        
+        self.x1 = np.zeros(self.n + 1)
+        self.x2 = np.zeros(self.n + 1)
+        
+        self.y = np.zeros(self.n)
+        self.e = np.zeros(self.n)
+        self.e_dot = np.zeros(self.n)
+        
+        self.u = np.zeros(self.n)
+        self.v_dot = np.zeros(self.n)
+
+    def compute_input(self, i):
+        self.y[i] = self.x1[i]
+        self.e[i] = self.y[i] - self.y_ref[i]
+        self.e_dot[i] = self.x2[i] - self.y_ref_dot[i]
+        
+        self.s[i] = self.e_dot[i] + self.c1 * self.e[i]
+        
+        self.k[i + 1] = self.k[i]
+        
+        self.v_dot[i] = - 2 * self.k[i + 1] * np.sign(self.s[i])
+        self.u[i] = -self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
+
+
+    
+    
 class ASTWC():
     def __init__(self, time, Te, reference=None) -> None:
         self.n = int(time / Te)
