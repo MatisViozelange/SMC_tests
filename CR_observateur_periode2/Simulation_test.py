@@ -4,11 +4,11 @@ import tkinter as tk
 from tqdm import tqdm
 from tkinter import ttk
 import matplotlib.pyplot as plt
-from modules import ASTWC, NN_based_STWC, basic_system, pendule, STWC
+from modules import ASTWC, NN_based_STWC, basic_system, pendule, STWC, easy_first_order, ultra_perturbed_system
 
 ################################################## SIMULATION ########################################################
-time = 20
-Te = 0.0005
+time = 15
+Te = 0.001
 n = int(time / Te) 
 times = np.linspace(0, time, n)
 y_ref = 10 * np.sin(times)
@@ -23,11 +23,13 @@ controler = ASTWC(time, Te, reference=None)
 # seconde controler with neural network
 NN_inner_controler = ASTWC(time, Te, reference=None)
 # NN_inner_controler = STWC(time, Te, k=k, reference=None)
-NN_controler = NN_based_STWC(NN_inner_controler, time, Te, neurones=50, gamma=0.075)
+NN_controler = NN_based_STWC(NN_inner_controler, time, Te, neurones=100, gamma=0.5)
 
 # dynamics
-system = basic_system(controler.times)
-# system = pendule(controler.times)
+# system = basic_system(controler.times)
+system = pendule(controler.times)
+# system = ultra_perturbed_system(controler.times)
+# system = easy_first_order(controler.times)
 
 
 # Loop simulation
@@ -42,11 +44,10 @@ for i in tqdm(range(n)):
     # NN_BO_Observator.compute_perturbation(i)
     
     # Update system response using the control input for ASTWC
-    u = controler.u[i]
     x1_dot, x2_dot = system.compute_dynamics(
                         controler.x1[i], 
                         controler.x2[i], 
-                        u, 
+                        controler.u[i], 
                         controler.times[i]
                     )
     
@@ -55,11 +56,10 @@ for i in tqdm(range(n)):
     controler.x2[i + 1] = controler.x2[i] + x2_dot * controler.Te
     
     # Update system response using the control input for NN_based_ASTWC
-    u = NN_controler.u[i]
     x1_dot, x2_dot = system.compute_dynamics(
                         NN_controler.controler.x1[i], 
                         NN_controler.controler.x2[i], 
-                        u, 
+                        NN_controler.u[i], 
                         NN_controler.controler.times[i]
                     )
     
@@ -95,7 +95,7 @@ fig, axs = plt.subplots(3, 3, num=1, figsize=(8, 6), sharex=True, sharey=False)
 
 ax1.title.set_text('ASTWC')
 ax1.plot(controler.times, controler.x1[:-1], label='x1')
-ax1.plot(controler.times, controler.x2[:-1], label='x2')
+# ax1.plot(controler.times, controler.x2[:-1], label='x2')
 ax1.plot(controler.times, controler.y_ref, label='ref')
 ax1.set_ylabel('x1, x2')
 ax1.legend()
@@ -127,7 +127,7 @@ ax3.legend()
 
 ax8.set_title('ASTWC')
 ax8.plot(times, controler.u, label='u')
-ax8.plot(times, controler.v_dot, label='v_dot')
+# ax8.plot(times, controler.v_dot, label='v_dot')
 ax8.set_xlabel('Time')
 ax8.set_ylabel('inputs')
 ax8.legend()
@@ -141,7 +141,7 @@ ax8.legend()
 
 ax4.title.set_text('NN_based_ASTWC')
 ax4.plot(NN_controler.controler.times, NN_controler.controler.x1[:-1], label='x1')
-ax4.plot(NN_controler.controler.times, NN_controler.controler.x2[:-1], label='x2')
+# ax4.plot(NN_controler.controler.times, NN_controler.controler.x2[:-1], label='x2')
 ax4.plot(NN_controler.controler.times, NN_controler.controler.y_ref, label='ref')
 ax4.set_ylabel('x1, x2')
 ax4.legend()

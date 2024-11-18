@@ -90,6 +90,7 @@ class ASTWC():
             self.k_dot[i] = self.alpha / np.sqrt(np.abs(self.s[i]))
             
         self.k[i + 1] = self.k[i] + self.k_dot[i] * self.Te
+
         self.v_dot[i] = -self.k[i + 1] * np.sign(self.s[i])
         self.u[i] = -self.k[i + 1] * np.sqrt(abs(self.s[i])) * np.sign(self.s[i]) + integrate.simpson(self.v_dot[:i + 1], dx=self.Te)
 
@@ -154,5 +155,5 @@ class NN_based_STWC(RBF_neural_network):
         self.compute_weights(i, self.controler.k[i], self.controler.s[i], self.controler.epsilon)
         perturbation = self.compute_perturbation(i)
         
-        self.u[i] = u_ASTWC - perturbation 
+        self.u[i] = u_ASTWC - perturbation
      

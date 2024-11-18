@@ -23,7 +23,7 @@ class pendule():
         l_dot = self.longueur_pendule_dot[i]
         
         x1_dot = x2
-        x2_dot = -2 * l_dot / l - self.g / l * np.sin(x1) + 2 * np.sin(t) + (1 + 0.5 * np.sin(t)) / (self.m * l**2) * u
+        x2_dot = -2 * l_dot / l - self.g / l * np.sin(x1) + 2 * np.sin(t) + u # (1 + 0.5 * np.sin(t)) / (self.m * l**2) * 
         
         return x1_dot, x2_dot
     
@@ -49,5 +49,31 @@ class basic_system():
     
     def get_perturbation(self, times, x1, x2):
         return self.a * np.sin(times)
+    
+class easy_first_order():
+    def __init__(self, times) -> None:
+        self.a = 5
+        self.name = 'easy_first_order'
+        
+    def compute_dynamics(self, x1, x2, u, t):
+        x1_dot = u + self.a * np.sin(t)
+        x2_dot = 0
+        return x1_dot, x2_dot
+    
+    def get_perturbation(self, times, x1, x2):
+        return self.a * np.sin(times)
+    
+class ultra_perturbed_system():
+    def __init__(self, times) -> None:
+        self.a = 50
+        self.name = 'ultra_perturbed_system'
+        
+    def compute_dynamics(self, x1, x2, u, t):
+        x1_dot = x2
+        x2_dot = u + self.a * np.sin(t) + 7 * np.sin(100 * t) + 20 * x1
+        return x1_dot, x2_dot
+    
+    def get_perturbation(self, times, x1, x2):
+        return self.a * np.sin(times) + 7 * np.sin(100 * times) + 20 * x1[:-1]
 
 
